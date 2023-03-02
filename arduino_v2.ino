@@ -154,7 +154,7 @@ void loop() {
   //  }
     
     //current speed in RPM 
-  //  time_interval = millis() - instant_time;
+    time_interval = millis() - instant_time;
 
     if (time_interval > 2000) {
       //instant_time = millis() - instant_time;
