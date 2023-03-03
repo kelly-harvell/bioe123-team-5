@@ -18,6 +18,8 @@ unsigned long instant_time = 0;
 unsigned long time_interval = 0;
 unsigned long time_cycle = 0;
 
+float current_speed = 0;
+
 int set_speed = 0;
 float centrifuge_time = 0.0;
 const byte numChars = 32;
@@ -29,7 +31,7 @@ void setup() {
   pinMode(motor_gate_pin, OUTPUT);
   Serial.begin(9600);
   while (!Serial);  // wait until the serial monitor is open before proceeding
-  Serial.println("Please enter desired motor speed in RPM.<12, 24.5>");
+  Serial.println("Please enter desired motor speed in RPM and spin cycle time in seconds in this format: <NUMBER, NUMBER>");
   attachInterrupt(digitalPinToInterrupt(photo_pin), photo, RISING);
 }
 
@@ -70,49 +72,49 @@ void recvWithStartEndMarkers() {
 }
 
 void parseData() {      // split the data into its parts
-
     char * strtokIndx; // this is used by strtok() as an index
- 
     strtokIndx = strtok(tempChars, ","); // this continues where the previous call left off
     set_speed = atoi(strtokIndx);     // convert this part to an integer
 
     strtokIndx = strtok(NULL, ",");
     centrifuge_time = atof(strtokIndx);     // convert this part to a float
-
+    centrifuge_time = centrifuge_time*1000;      // convert to ms from seconds
 }
 
 void showParsedData() {
-    Serial.print("Set Speed: ");
+    Serial.print("Set Speed (in RPM): ");
     Serial.println(set_speed);
-    Serial.print("Centrifuge Cycle Time: ");
-    Serial.println(centrifuge_time);
+    Serial.print("Centrifuge Cycle Time (in seconds): ");
+    Serial.println(centrifuge_time/1000);
 }
 
-int compute (int current_speed, int user_input) {
+int compute (int current_speed, int set_speed) {
       //currentTime = millis();
       //elapsedTime = currentTime - previousTime;
-      int k = 5;
-      int error = user_input - current_speed;
-      int out = k*error;
+      float k = 0.25;
+      float error = set_speed - current_speed;
+      //Serial.println(error);      
+      int out = floor(k*error);
       return out;
 }
 
 void loop() {
-
+  
   recvWithStartEndMarkers();
     if (newData == true) {
         strcpy(tempChars, receivedChars);
         parseData();
         showParsedData();
       //int user_input = Serial.parseInt();
-      if (set_speed > 1) {
-        write_duty = (set_speed/12);
+      if (set_speed >= 1) {
+        write_duty = 36.4 - (.0102*set_speed) + (pow(set_speed, 2.0) * .0000351);
         //Serial.println("Current speed in RPM: ");
         //Serial.println(set_speed);
+        Serial.println(write_duty);
         start_time = millis();
       } 
-      if (set_speed == 1) {
-        write_duty = 0;        
+      if (set_speed == 0) {
+        write_duty = 0;   
       }      
       analogWrite(motor_gate_pin, write_duty);
       newData = false;
@@ -157,25 +159,24 @@ void loop() {
     time_interval = millis() - instant_time;
 
     if (time_interval > 2000) {
-      //instant_time = millis() - instant_time;
       float current_speed = (count*1000*60)/time_interval;
+      Serial.print("Current speed in RPM: "); 
       Serial.println(current_speed);
-      //int current_speed = (count*1000*60)/time_cycle;
-
       instant_time = millis();
+      //Serial.println(count);
       count = 0;
-      //time_interval = millis() - instant_time;
-      //Serial.println("Current speed in RPM: ");
     }
 
     //input = current_speed;
-
-    //int output = (current_speed/12) + ((compute(current_speed, user_input))/12);
-    //Serial.println(output);
-    
-    //if ((output >= 0) && (output <= 255)) {
-    // analogWrite(motor_gate_pin, output);           
+    //if (centrifuge_time > 0) {
+    //  unsigned long output = write_duty + (compute(current_speed, set_speed));
+    //  if ((output > 0) && (output <= 255)) {
+    //    write_duty = output;
+    //    analogWrite(motor_gate_pin, write_duty);         
+    //  }  
     //}
+    //Serial.println(output);
+
 
     //time_cycle = millis() - start_time;
     //3050 RPM acheived with 255
