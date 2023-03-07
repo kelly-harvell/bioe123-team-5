@@ -10,9 +10,6 @@ def notification():
     winsound.Beep(880, 300)
     winsound.Beep(880, 800)
 
-#if __name__ == '__main__':
-#    main()
-
 centrifugetime = 0
 
 while(1):
