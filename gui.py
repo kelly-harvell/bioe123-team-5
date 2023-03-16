@@ -3,7 +3,6 @@
 
 import winsound
 import serial
-import time
 
 ser = serial.Serial('COM9', baudrate=9600, timeout=1)
 
@@ -15,33 +14,6 @@ OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path(r"C:\Users\kelly\Desktop\BIOE 123\V3\assets\frame0")
 
 
-# class App:
-#    def __init__(self):
-#        self.root = Tk()
-#        self.label = tk.Label(text="")
-#       self.label.pack()
-#        self.update_clock()
-#        self.root.mainloop()
-
-#    def update_clock(self):
-#        now = time.strftime("%H:%M:%S")
-#        self.label.configure(text=now)
-#        self.root.after(1000, self.update_clock)
-
-
-# def update_clock(self):
-# now = time.strftime("%H:%M:%S")
-#    self.label.configure(text=centrifugetime)
-#    self.root.after(1000, self.update_clock)
-
-# app = App()
-
-
-# if centrifugetime != print_time:
-#    canvas.create_text((990.5, 415.5), text=str(centrifugetime))
-#    print_time = centrifugetime
-
-
 def notification():
     print("Cycle Finished!")
     winsound.Beep(880, 800)
@@ -50,40 +22,21 @@ def notification():
     winsound.Beep(880, 800)
 
 
-# def countdown(t):
-#    while t:
-#        mins, secs = divmod(t, 60)
-#        timer = '{:02d}:{:02d}'.format(mins, secs)
-#        print(timer, end="\r")
-#        time.sleep(1)
-#        t -= 1
-
 def countdown(time):
     time -= 1
-    msg = 'counting down '
-    status.config(text=f'{msg}({time}sec)')
+    msg = 'Counting Down: '
+    status.config(text=f'{msg}{time} seconds')
 
-    if time > 0:  # time != 0 &
+    if time > 0:
         solve = window.after(1000, countdown, time)
         global c
         if c == 1:
-            window.after_cancel(solve)  # not working
+            window.after_cancel(solve)
             window.after(1000, countdown, 1)
             c = 0
 
-        # arduinoData = ser.readline().decode('ascii')
-        # if arduinoData == "Cycle Complete!":
     elif time == 0:
-        # window.after(1000, countdown, time)
         notification()
-    # else:
-    # time = 0
-    # window.after(1000, countdown, time)
-    # notification()
-
-    # arduinoData = ser.readline().decode('ascii')
-    # if arduinoData == "Cycle Complete!":
-    #    notification()
 
 
 def relative_to_assets(path: str) -> Path:
@@ -99,9 +52,6 @@ def submit():
     global c
     c = 0
 
-    # canvas.create_text((990.5, 415.5), text=str(centrifugetime))
-    # print_time = centrifugetime
-
     setspeed_var.set("")
     centrifugetime_var.set("")
 
@@ -113,23 +63,10 @@ def stop():
     ser.write(str(message).encode('ascii'))
     global c
     c = 1
-    # window.after_cancel(solve)
-    # countdown(1)
 
 
 centrifugetime = 0
-# solve = ''
 c = 0
-
-# while(1):
-#    while centrifugetime == 0:
-#        setspeed = input("Input desired set speed in RPM: ")
-#        centrifugetime = input("Input desired centrifuge spin cycle time in seconds: ")
-#        message = str('<' + setspeed + ',' + centrifugetime + '>')
-#        ser.write(str(message).encode('ascii'))
-#        countdown(int(centrifugetime))
-#        print_time = centrifugetime
-# print_time = centrifugetime
 
 window = Tk()
 
@@ -286,32 +223,11 @@ image_1 = canvas.create_image(
     image=image_image_1
 )
 
-# if centrifugetime != print_time:
-#    app = App()
-# update_clock(self)
-# canvas.create_text((990.5, 415.5), text=str(centrifugetime))
-# print_time = centrifugetime
-
-# root = tk.Tk()
-
-# canvas.create_rectangle(
-#    772.0,
-#    327.0,
-#    1209.0,
-#    504.0,
-#    fill="#D9D9D9",
-#    outline="")
-
-status = tk.Label(window, text='countdown')
+status = tk.Label(window, text='Start Cycle')
 status.place(relx=(window.winfo_screenwidth() // 2),
              rely=(window.winfo_screenwidth() // 2),
              anchor='center')
 status.pack()
-
-# play notification sound when cycle is complete
-# arduinoData = ser.readline().decode('ascii')
-# if arduinoData == "Cycle Complete!":
-#    notification()
 
 window.resizable(False, False)
 window.mainloop()
