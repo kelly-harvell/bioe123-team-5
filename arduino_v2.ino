@@ -10,7 +10,6 @@
 int motor_gate_pin = 5;
 int write_duty = 0;
 int photo_pin = 2;
-int stop_pin = 3;
 unsigned long count = 0;
 unsigned long start_time = 0;
 unsigned long user_timespin = 0;
@@ -34,18 +33,10 @@ void setup() {
   while (!Serial);  // wait until the serial monitor is open before proceeding
   Serial.println("Please enter desired motor speed in RPM and spin cycle time in seconds in this format: <NUMBER, NUMBER>");
   attachInterrupt(digitalPinToInterrupt(photo_pin), photo, RISING);
-  attachInterrupt(digitalPinToInterrupt(stop_pin), stop, RISING);
 }
 
 void photo() {
   count = count + 1;
-}
-
-void stop() {
-  write_duty = 0;
-  centrifuge_time = 0;
-  analogWrite(motor_gate_pin, write_duty);
-  Serial.print("Cycle Complete!");
 }
 
 void recvWithStartEndMarkers() {
@@ -98,11 +89,8 @@ void showParsedData() {
 }
 
 int compute (int current_speed, int set_speed) {
-      //currentTime = millis();
-      //elapsedTime = currentTime - previousTime;
-      float k = 0.03; //k = 0.025 was working, k = 0.25 is too high
-      float error = set_speed - current_speed;
-      //Serial.println(error);      
+      float k = 0.03;
+      float error = set_speed - current_speed;      
       int out = floor(k*error);
       return out;
 }
@@ -114,12 +102,8 @@ void loop() {
         strcpy(tempChars, receivedChars);
         parseData();
         showParsedData();
-      //int user_input = Serial.parseInt();
       if (set_speed >= 1) {
         write_duty = 36.4 - (.0102*set_speed) + (pow(set_speed, 2.0) * .0000351);
-        //Serial.println("Current speed in RPM: ");
-        //Serial.println(set_speed);
-        //Serial.println(write_duty);
         start_time = millis();
       } 
       if (set_speed == 0) {
@@ -128,8 +112,7 @@ void loop() {
       analogWrite(motor_gate_pin, write_duty);
       newData = false;
     }
-      //Serial.println((String)"Duty cycle set to: "+write_duty);
-      //Serial.println("Enter another integer (PWM between 0 and 255) to change speed: ");  
+
     time_cycle = millis() - start_time;
 
     if (centrifuge_time > 0) {
@@ -137,64 +120,25 @@ void loop() {
         write_duty = 0;
         analogWrite(motor_gate_pin, write_duty);
         Serial.print("Cycle Complete!");
-        //Serial.print("y");
         centrifuge_time = 0;      
       }
     }
-
-  //if (millis() < 60000) {
-  //  if(Serial.available()>0) {
-      //write_duty = Serial.read();
-
-  //    user_input = Serial.parseInt();
-  //    if (user_input > 1) {
-  //      write_duty = (user_input/12);
-  //      Serial.println("Set speed in RPM: ");
-  //      Serial.println(user_input);
-  //      start_time = millis();
-
-        //Serial.println("Enter desired spin cycle time in seconds: ");
-        //int user_timespin = Serial.parseInt();
-        //Serial.println(user_timespin);
-     
-  //      Serial.println("Note: If you change speed during spin cycle, timer restarts.");
-  //    } 
-  //    if (user_input == 1) {
-  //      write_duty = 0;       
-  //    }      
-  //    analogWrite(motor_gate_pin, write_duty);
-  //  }
     
-    //current speed in RPM 
     time_interval = millis() - instant_time;
 
-    //used to be 2000 (2s), was workig with 250
     if (time_interval > 250) {
-      current_speed = (count*1000*60)/time_interval;
-      //Serial.println("Current speed in RPM: "); 
-      Serial.println(current_speed);
+      current_speed = (count*1000*60)/time_interval; //current speed in RPM 
       instant_time = millis();
       count = 0;
     }
 
-    //input = current_speed;
     if (centrifuge_time > 0) {
       unsigned long output = write_duty + (compute(current_speed, set_speed));
       if ((output > 0) && (output <= 255)) {
-        write_duty = output;     
-        //Serial.println(output);    
+        write_duty = output;    
         }  
     }
 
     analogWrite(motor_gate_pin, write_duty);
 
-
-    //time_cycle = millis() - start_time;
-    //3050 RPM acheived with 255
-    // user_input/12 = write_duty
-
-    //Set desired time of centrifugation 
-    //if (time_cycle == (user_timespin*10^3)) {
-    //  write_duty = 0;
-    //}
 }
